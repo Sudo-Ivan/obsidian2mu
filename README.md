@@ -1,5 +1,7 @@
 # Obsidian2Mu
 
+[![CodeQL Security Scan](https://github.com/Sudo-Ivan/obsidian2mu/actions/workflows/codeql.yml/badge.svg)](https://github.com/Sudo-Ivan/obsidian2mu/actions/workflows/codeql.yml)
+
 Convert Obsidian markdown to markup for reticulum and view .mu files
 
 Still work in progress. Feel free to contribute.
