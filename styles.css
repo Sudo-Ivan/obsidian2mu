@@ -1,0 +1,16 @@
+.mu-content {
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.mu-content blockquote {
+    border-left: 4px solid var(--text-muted);
+    padding-left: 1em;
+    margin: 1em 0;
+}
+
+.mu-content pre {
+    background-color: var(--background-secondary);
+    padding: 1em;
+    border-radius: 4px;
+} 

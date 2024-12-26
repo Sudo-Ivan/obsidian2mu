@@ -1,0 +1,12 @@
+{
+    "id": "obsidian2mu",
+    "name": "Obsidian2Mu",
+    "version": "1.0.0",
+    "minAppVersion": "0.15.0",
+    "description": "Convert Obsidian markdown to markup for reticulum and view .mu files",
+    "author": "Ivan",
+    "isDesktopOnly": false,
+    "supportedExtensions": [
+        "mu"
+    ]
+} 
