@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting, Notice, TFile, Vault, MarkdownView, TextFileView } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, Notice, TFile, Vault, MarkdownView, TextFileView, WorkspaceLeaf } from 'obsidian';
 import * as path from 'path';
 
 interface Obsidian2MuSettings {
@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS: Obsidian2MuSettings = {
 
 // Add MuView class for rendering .mu files
 class MuView extends TextFileView {
-    constructor(leaf: any) {
+    constructor(leaf: WorkspaceLeaf) {
         super(leaf);
     }
 
@@ -39,7 +39,6 @@ class MuView extends TextFileView {
 
     setViewData(data: string, clear: boolean) {
         this.data = data;
-        // Convert mu to HTML for display
         const htmlContent = this.muToHtml(data);
         this.contentEl.innerHTML = `<div class="mu-content">${htmlContent}</div>`;
     }
@@ -80,7 +79,7 @@ class MuView extends TextFileView {
             .replace(/^#\s*(.*$)/gm, '<!-- $1 -->');
     }
 
-    clear() {
+    clear(): void {
         this.data = "";
     }
 }
@@ -98,7 +97,7 @@ export default class Obsidian2MuPlugin extends Plugin {
 
     async convertToMu() {
         const activeFile = this.app.workspace.getActiveFile();
-        if (!activeFile || !activeFile.extension.match(/md|markdown/)) {
+        if (!activeFile || !/^(md|markdown)$/.test(activeFile.extension)) {
             throw new Error('No markdown file is currently active');
         }
         await this.convertFile(activeFile);
@@ -189,12 +188,16 @@ export default class Obsidian2MuPlugin extends Plugin {
         }
     }
 
+    private showNotice(message: string) {
+        const notice = new Notice(message);
+        return notice;
+    }
+
     async onload() {
         console.log('Loading Obsidian2Mu Plugin');
         try {
             await this.loadSettings();
             
-            // Register .mu extension and viewer
             this.registerExtensions(['mu'], 'mu-view');
             this.registerView('mu-view', (leaf) => new MuView(leaf));
             
@@ -203,24 +206,21 @@ export default class Obsidian2MuPlugin extends Plugin {
             this.addRibbonIcon('file-down', 'Convert to .mu', async () => {
                 try {
                     await this.convertToMu();
-                    new Notice('Conversion completed successfully');
+                    this.showNotice('Conversion completed successfully');
                 } catch (error) {
                     console.error('Conversion failed:', error);
-                    new Notice(`Conversion failed: ${error.message}`);
+                    this.showNotice(`Conversion failed: ${error.message}`);
                 }
             });
 
-            // Enhanced auto-convert with debouncing
             if (this.settings.autoConvert) {
                 let timeoutId: NodeJS.Timeout;
                 
                 this.registerEvent(
                     this.app.vault.on('modify', async (file: TFile) => {
-                        if (file.extension === 'md' || file.extension === 'markdown') {
-                            // Clear previous timeout
+                        if (/^(md|markdown)$/.test(file.extension)) {
                             if (timeoutId) clearTimeout(timeoutId);
                             
-                            // Set new timeout to prevent multiple rapid conversions
                             timeoutId = setTimeout(async () => {
                                 try {
                                     await this.convertFile(file);
@@ -242,15 +242,16 @@ export default class Obsidian2MuPlugin extends Plugin {
                                     }
                                 } catch (error) {
                                     console.error('Auto-conversion failed:', error);
-                                    new Notice(`Auto-conversion failed: ${error.message}`);
+                                    this.showNotice(`Auto-conversion failed: ${error.message}`);
                                 }
-                            }, 500); // 500ms debounce delay
+                            }, 500);
                         }
                     })
                 );
             }
         } catch (error) {
             console.error('Failed to load plugin:', error);
+            this.showNotice(`Failed to load plugin: ${error.message}`);
         }
     }
 
